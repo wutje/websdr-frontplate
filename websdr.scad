@@ -22,6 +22,9 @@ D2H=29;
 D2W=91;
 D2D=3 + extra;
 
+STANDOFF_D=7;
+WIREHOLE_D=7;
+
 // detail circles
 $fn=20;
 
@@ -39,21 +42,23 @@ module display_module() {
     //Display Module
     translate([1, 0.5, 0]) { //net even off center
         //Base
-        translate([0, 0, DD/2+PD])
+        translate([0, 0, DD/2+PD/2])
             color("white") cube([DW, DH, DD], center=true);
         //Screen
-        translate([-(DW-D2W)/2, -(DH-D2H)/2, D2D/2+DD+PD])
+        translate([-(DW-D2W)/2, -(DH-D2H)/2, D2D/2+DD+PD/2])
             color("black") cube([D2W, D2H, D2D], center=true);
     }
 }
 
-module front_plate() {
-    wh = DD + PD; //Afstand tussen front plaat en PCB aka werkhoogte
+module front_plate(wh) {
     foffset = (FH - DH) / 4; //Front plaat offset tov scherm
+    //foffset = 0;
     
     difference() {
         //Front plaat
-        translate([0, -foffset, wh])
+        translate([0, -foffset, 0])
+            //Sommige objecten vanuit center bouwen en andere niet
+            //vind ik verwarrend en probeer ik te voorkomen.
             color("grey") cube([FW, FH, FD], center=true);
 
         d = 3.2; //Diameter gaten lucht rooster + afstand tussen gaten
@@ -65,25 +70,27 @@ module front_plate() {
             display_y = 0.5 + -(DH-D2H)/2 + -D2H/2;
             o = display_x + (i * (2 * d)) + d; 
             h = display_y - 2; //mm below display;
-            translate([o,     h -1 * d, wh + -5]) cylinder(10, d=d);
-            translate([o + d, h -2 * d, wh + -5]) cylinder(10, d=d);      
-            translate([o,     h -3 * d, wh + -5]) cylinder(10, d=d);
-            translate([o + d, h -4 * d, wh + -5]) cylinder(10, d=d);
+            translate([o,     h -1 * d, -5]) cylinder(10, d=d);
+            translate([o + d, h -2 * d, -5]) cylinder(10, d=d);      
+            translate([o,     h -3 * d, -5]) cylinder(10, d=d);
+            translate([o + d, h -4 * d, -5]) cylinder(10, d=d);
         }
     
-        wirehole = 7;
-        translate([FW/2, -FH/2 -foffset, wh + -5]) cylinder(10, d=wirehole); 
+        translate([FW/2, -FH/2 -foffset, -5]) cylinder(10, d=WIREHOLE_D); 
  
     }
     // Pootjes
-    dia = 7;
-    translate([+(PW/2-offset), +(PH/2-offset),0]) cylinder(wh, d=dia);
-    translate([-(PW/2-offset), +(PH/2-offset),0]) cylinder(wh, d=dia);
-    translate([+(PW/2-offset), -(PH/2-offset),0]) cylinder(wh, d=dia);
-    translate([-(PW/2-offset), -(PH/2-offset),0]) cylinder(wh, d=dia);
-
-
-
+    dia = STANDOFF_D;
+    translate([+(PW/2-offset), +(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
+    translate([-(PW/2-offset), +(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
+    translate([+(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
+    translate([-(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
 }
-display_module();
-front_plate();
+
+difference() {
+    //Het is beter pm een module to maken in het origin en dan pas later
+    //te translaten naar waar hij in de assembly moet komen.
+    translate([0, 0, DD+PD/2+FD/2])
+        front_plate(DD);
+    #display_module();
+}
