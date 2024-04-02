@@ -1,8 +1,3 @@
-/* [front] */
-FH=60;
-FW=120;
-FD=1;
-
 /* [PCB dims] */
 PH=37;
 PW=116;
@@ -22,8 +17,17 @@ D2H=29;
 D2W=91;
 D2D=3 + extra;
 
-STANDOFF_D=7;
+/* [frontplate] */
+FH=60;
+FW=120;
+FD=1;
 WIREHOLE_D=7;
+STANDOFF_D=7;
+AIRFLOW_HOLE_DIAMETER=3.2;
+//Front plaat offset tov scherm 25% vanaf bovenkant
+//Midden is onhandig ivm rooster gaten
+DISPLAY_OFFSET = (FH - DH) * 0.25; 
+
 
 // detail circles
 $fn=20;
@@ -50,8 +54,35 @@ module display_module() {
     }
 }
 
+module holes(width, heigth) {
+        d = AIRFLOW_HOLE_DIAMETER; //Diameter gaten lucht rooster + afstand tussen gaten
+        x_margin = 1 * d;    
+        x_rem = width - x_margin;
+        x_width = (2 * d); 
+        columns = floor(x_rem / x_width) - 1;
+        //Voeg rest toe aan offset. Zodat marge links en rechts gelijk is
+        x_offset = (x_margin + x_rem - (columns * x_width)) / 2;
+        
+        //echo(x_margin, x_rem, x_width, columns, x_offset);
+    
+        y_margin = 1 * d; // 0.5 diameter ruimte boven en onder
+        y_rem = heigth - y_margin;
+        rows = floor((y_rem) / d) - 1;
+        //Voeg rest toe aan offset. Zodat boven en onder keurig verdeeld is
+        y_offset = (y_margin + y_rem - rows * d) / 2;
+    
+        for(i = [0:columns]) {
+            for(j = [0:rows]) {
+                o = x_offset + i * x_width; 
+                of = ((j % 2)==0) ? o : o + d;
+                translate([of, y_offset + j * d, -5]) cylinder(10, d=d);
+            }
+        }
+        color("green") cube([width, heigth, 3]);
+}
+
 module front_plate(wh) {
-    foffset = (FH - DH) / 4; //Front plaat offset tov scherm
+    foffset = DISPLAY_OFFSET;
     //foffset = 0;
     
     difference() {
@@ -60,24 +91,8 @@ module front_plate(wh) {
             //Sommige objecten vanuit center bouwen en andere niet
             //vind ik verwarrend en probeer ik te voorkomen.
             color("grey") cube([FW, FH, FD], center=true);
-
-        d = 3.2; //Diameter gaten lucht rooster + afstand tussen gaten
-        nr_holes = (D2W - (1 * d)) / (d * 2);
-        
-        //Gaatjes voor lucht rooster
-        for(i = [0:nr_holes]) {
-            display_x = 1 + -(DW-D2W)/2 + -D2W/2;
-            display_y = 0.5 + -(DH-D2H)/2 + -D2H/2;
-            o = display_x + (i * (2 * d)) + d; 
-            h = display_y - 2; //mm below display;
-            translate([o,     h -1 * d, -5]) cylinder(10, d=d);
-            translate([o + d, h -2 * d, -5]) cylinder(10, d=d);      
-            translate([o,     h -3 * d, -5]) cylinder(10, d=d);
-            translate([o + d, h -4 * d, -5]) cylinder(10, d=d);
-        }
-    
+   
         translate([FW/2, -FH/2 -foffset, -5]) cylinder(10, d=WIREHOLE_D); 
- 
     }
     // Pootjes
     dia = STANDOFF_D;
@@ -85,12 +100,26 @@ module front_plate(wh) {
     translate([-(PW/2-offset), +(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
     translate([+(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
     translate([-(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
+
+    translate([0, D2H/2+DISPLAY_OFFSET - 2, 0])    
+        text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="top");
 }
 
 difference() {
-    //Het is beter pm een module to maken in het origin en dan pas later
+    //Het is beter om een module te maken in het origin en dan pas later
     //te translaten naar waar hij in de assembly moet komen.
-    translate([0, 0, DD+PD/2+FD/2])
+    translate([0, 0, DD+PD/2+FD/2]) {
+        difference() {
         front_plate(DD);
-    #display_module();
+      
+        translate([ -(DW-D2W)/2 + -D2W/2,
+                    -(DH-D2H)/2 + -D2H/2 - 4, //Keep 2mm clearance from top and bottom
+                    0])
+            holes(D2W, FH-D2H-DISPLAY_OFFSET - 4);
+        }
+
+       
+    }
+    //#display_module();
+    
 }
