@@ -27,7 +27,7 @@ AIRFLOW_HOLE_DIAMETER=3.2;
 //Front plaat offset tov scherm 25% vanaf bovenkant
 //Midden is onhandig ivm rooster gaten
 DISPLAY_OFFSET = (FH - DH) * 0.25; 
-
+DISP_X_CORRECTION = 1;
 
 // detail circles
 $fn=20;
@@ -44,7 +44,7 @@ module display_module() {
     }
 
     //Display Module
-    translate([1, 0.5, 0]) { //net even off center
+    translate([DISP_X_CORRECTION, 0.5, 0]) { //net even off center
         //Base
         translate([0, 0, DD/2+PD/2])
             color("white") cube([DW, DH, DD], center=true);
@@ -53,46 +53,39 @@ module display_module() {
             color("black") cube([D2W, D2H, D2D], center=true);
     }
 }
+module holes(width, height) {
+    d = AIRFLOW_HOLE_DIAMETER;
+    // -2 to leave margin at both sides
+    cols = floor(width/d - 2);
+    rows = floor(height/d - 2);
 
-module holes(width, heigth) {
-        d = AIRFLOW_HOLE_DIAMETER; //Diameter gaten lucht rooster + afstand tussen gaten
-        x_margin = 1 * d;    
-        x_rem = width - x_margin;
-        x_width = (2 * d); 
-        columns = floor(x_rem / x_width) - 1;
-        //Voeg rest toe aan offset. Zodat marge links en rechts gelijk is
-        x_offset = (x_margin + x_rem - (columns * x_width)) / 2;
-        
-        //echo(x_margin, x_rem, x_width, columns, x_offset);
-    
-        y_margin = 1 * d; // 0.5 diameter ruimte boven en onder
-        y_rem = heigth - y_margin;
-        rows = floor((y_rem) / d) - 1;
-        //Voeg rest toe aan offset. Zodat boven en onder keurig verdeeld is
-        y_offset = (y_margin + y_rem - rows * d) / 2;
-    
-        for(i = [0:columns]) {
-            for(j = [0:rows]) {
-                o = x_offset + i * x_width; 
-                of = ((j % 2)==0) ? o : o + d;
-                translate([of, y_offset + j * d, -5]) cylinder(10, d=d);
+    translate([-(cols*d)/2, -(rows*d)/2, 0]) // bring to center
+        for(j = [0:rows]) {
+            for(i = [0:cols]) {
+                //On even rows leave out even cols
+                //On odd rows leave out odd cols
+                if(i%2 != j%2)
+                    translate([i*d,j*d,0])
+                        cylinder(10, d=d, center=true);
             }
         }
-        color("green") cube([width, heigth, 3]);
+    /*color("green") cube([width, height, 3], center=true);*/
 }
 
 module front_plate(wh) {
     foffset = DISPLAY_OFFSET;
-    //foffset = 0;
-    
+
     difference() {
         //Front plaat
         translate([0, -foffset, 0])
-            //Sommige objecten vanuit center bouwen en andere niet
-            //vind ik verwarrend en probeer ik te voorkomen.
             color("grey") cube([FW, FH, FD], center=true);
-   
+
         translate([FW/2, -FH/2 -foffset, -5]) cylinder(10, d=WIREHOLE_D); 
+
+        translate([0, D2H/2+DISPLAY_OFFSET - 2, 0])    
+            //text is 2D!
+            linear_extrude(FD)
+                text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="top");
     }
     // Pootjes
     dia = STANDOFF_D;
@@ -100,26 +93,20 @@ module front_plate(wh) {
     translate([-(PW/2-offset), +(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
     translate([+(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
     translate([-(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
-
-    translate([0, D2H/2+DISPLAY_OFFSET - 2, 0])    
-        text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="top");
 }
 
 difference() {
-    //Het is beter om een module te maken in het origin en dan pas later
-    //te translaten naar waar hij in de assembly moet komen.
     translate([0, 0, DD+PD/2+FD/2]) {
         difference() {
-        front_plate(DD);
-      
-        translate([ -(DW-D2W)/2 + -D2W/2,
-                    -(DH-D2H)/2 + -D2H/2 - 4, //Keep 2mm clearance from top and bottom
-                    0])
-            holes(D2W, FH-D2H-DISPLAY_OFFSET - 4);
-        }
+            front_plate(DD);
 
-       
+            margin = 2;
+            holes_w = D2W;
+            holes_h = FH-D2H-DISPLAY_OFFSET - 2*margin;
+            translate([ 0, -(holes_h+D2H)/2-margin, 0])
+                holes(holes_w, holes_h);
+        }
     }
-    //#display_module();
-    
+    translate([(DW-D2W)/2-DISP_X_CORRECTION, 0,0])
+        display_module();
 }
