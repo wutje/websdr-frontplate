@@ -53,8 +53,9 @@ module display_module() {
             color("black") cube([D2W, D2H, D2D], center=true);
     }
 }
-module holes(width, height) {
-    d = AIRFLOW_HOLE_DIAMETER;
+
+module holes(width, height, d) {
+    
     // -2 to leave margin at both sides
     cols = floor(width/d - 2);
     rows = floor(height/d - 2);
@@ -79,13 +80,14 @@ module front_plate(wh) {
         //Front plaat
         translate([0, -foffset, 0])
             color("grey") cube([FW, FH, FD], center=true);
+        translate([0, -foffset, FD])
 
         translate([FW/2, -FH/2 -foffset, -5]) cylinder(10, d=WIREHOLE_D); 
 
-        translate([0, D2H/2+DISPLAY_OFFSET - 2, 0])    
+        translate([0, D2H/2+DISPLAY_OFFSET - 1, 0])    
             //text is 2D!
             linear_extrude(FD)
-                text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="top");
+                text("PA3DXI PD0JVG PA3WLE", font="ComicSans", size=5, halign="center", valign="top");
     }
     // Pootjes
     dia = STANDOFF_D;
@@ -104,9 +106,10 @@ difference() {
             holes_w = D2W;
             holes_h = FH-D2H-DISPLAY_OFFSET - 2*margin;
             translate([ 0, -(holes_h+D2H)/2-margin, 0])
-                holes(holes_w, holes_h);
+                holes(holes_w, holes_h, AIRFLOW_HOLE_DIAMETER);
         }
     }
     translate([(DW-D2W)/2-DISP_X_CORRECTION, 0,0])
         display_module();
 }
+ 
