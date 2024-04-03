@@ -80,14 +80,13 @@ module front_plate(wh) {
         //Front plaat
         translate([0, -foffset, 0])
             color("grey") cube([FW, FH, FD], center=true);
-        translate([0, -foffset, FD])
 
         translate([FW/2, -FH/2 -foffset, -5]) cylinder(10, d=WIREHOLE_D); 
 
         translate([0, D2H/2+DISPLAY_OFFSET - 1, 0])    
             //text is 2D!
             linear_extrude(FD)
-                text("PA3DXI PD0JVG PA3WLE", font="ComicSans", size=5, halign="center", valign="top");
+                text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="top");
     }
     // Pootjes
     dia = STANDOFF_D;
