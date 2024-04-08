@@ -12,7 +12,7 @@ DD=8;
 
 /* [Display screen] */
 // set to something big so you can diff it with the front
-extra=20;
+extra=10;
 D2H=29;
 D2W=91;
 D2D=3 + extra;
@@ -20,9 +20,9 @@ D2D=3 + extra;
 /* [frontplate] */
 FH=60;
 FW=120;
-FD=1;
+FD=1.8;
 WIREHOLE_D=7;
-STANDOFF_D=7;
+STANDOFF_D=6;
 AIRFLOW_HOLE_DIAMETER=3.2;
 //Front plaat offset tov scherm 25% vanaf bovenkant
 //Midden is onhandig ivm rooster gaten
@@ -55,7 +55,8 @@ module display_module() {
 }
 
 module holes(width, height, d) {
-    
+    //if (0) 
+    {
     // -2 to leave margin at both sides
     cols = floor(width/d - 2);
     rows = floor(height/d - 2);
@@ -70,33 +71,37 @@ module holes(width, height, d) {
                         cylinder(10, d=d, center=true);
             }
         }
+    }
     /*color("green") cube([width, height, 3], center=true);*/
 }
 
 module front_plate(wh) {
-    foffset = DISPLAY_OFFSET;
+    translate([0, -DISPLAY_OFFSET, 0]) difference() {
+        // Front plaat 
+        color("grey") cube([FW, FH, FD], center=true);
+        
+        // Gat in de hoek tbv voeding
+        translate([FW/2, -FH/2, -5]) cylinder(10, d=WIREHOLE_D); 
 
-    difference() {
-        //Front plaat
-        translate([0, -foffset, 0])
-            color("grey") cube([FW, FH, FD], center=true);
-
-        translate([FW/2, -FH/2 -foffset, -5]) cylinder(10, d=WIREHOLE_D); 
-
-        translate([0, D2H/2+DISPLAY_OFFSET - 1, 0])    
+        // Text aan bovenkant
+        translate([0, (FH + D2H)/4 + DISPLAY_OFFSET/2 - 1, 0.5])    
             //text is 2D!
             linear_extrude(FD)
-                text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="top");
-    }
+                text("PA3DXI PD0JVG PA3WLE", size=5, halign="center", valign="center");
+    };         
     // Pootjes
     dia = STANDOFF_D;
-    translate([+(PW/2-offset), +(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
-    translate([-(PW/2-offset), +(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
-    translate([+(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
-    translate([-(PW/2-offset), -(PH/2-offset), -wh-FD/2]) cylinder(wh, d=dia);
+    //foffset = DISPLAY_OFFSET;
+    translate([(DW-D2W)/2-DISP_X_CORRECTION - 1.5, 0,0]) {
+    translate([+(PW/2-offset), +(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
+    translate([-(PW/2-offset), +(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
+    translate([+(PW/2-offset), -(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
+    translate([-(PW/2-offset), -(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
+    }
 }
 
-difference() {
+difference() 
+{
     translate([0, 0, DD+PD/2+FD/2]) {
         difference() {
             front_plate(DD);
@@ -108,7 +113,14 @@ difference() {
                 holes(holes_w, holes_h, AIRFLOW_HOLE_DIAMETER);
         }
     }
-    translate([(DW-D2W)/2-DISP_X_CORRECTION, 0,0])
+    translate([(DW-D2W)/2-DISP_X_CORRECTION- 1.5, 0,0])
         display_module();
 }
- 
+    
+if (0)
+/* Tot 2.5 van de rand zit in de behuizing. */
+translate([0, -DISPLAY_OFFSET, FD+DD]) difference() { 
+    cube([FW, FH, 10], center=true);
+    cube([FW-2.5, FH-2.5, 11], center=true);      
+};
+
