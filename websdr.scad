@@ -20,7 +20,7 @@ D2D=3 + extra;
 /* [frontplate] */
 FH=60;
 FW=120;
-FD=1.8;
+FD=2;
 WIREHOLE_D=7;
 STANDOFF_D=6;
 AIRFLOW_HOLE_DIAMETER=3.2;
