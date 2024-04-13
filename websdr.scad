@@ -1,9 +1,9 @@
-/* [PCB dims] */
+/* [PCB dims]. From datasheet */
 PH=37;
 PW=116;
 PD=2;
 //holes
-offset=3;
+offset=4;
 
 /* [Display] */
 DH=32;
@@ -12,9 +12,9 @@ DD=8;
 
 /* [Display screen] */
 // set to something big so you can diff it with the front
-extra=10;
+extra=0;
 D2H=29;
-D2W=91;
+D2W=91.3;
 D2D=3 + extra;
 
 /* [frontplate] */
@@ -51,6 +51,12 @@ module display_module() {
         //Screen
         translate([-(DW-D2W)/2, -(DH-D2H)/2, D2D/2+DD+PD/2])
             color("black") cube([D2W, D2H, D2D], center=true);
+        
+        // Text aan bovenkant
+        translate([-(DW-D2W)/2, -(DH-D2H)/2, 10+D2D/2+DD+PD/2])
+            //text is 2D!
+            linear_extrude(FD)
+                text("Deze kant is boven", size=5, halign="center", valign="center");        
     }
 }
 
@@ -92,7 +98,8 @@ module front_plate(wh) {
     // Pootjes
     dia = STANDOFF_D;
     //foffset = DISPLAY_OFFSET;
-    translate([(DW-D2W)/2-DISP_X_CORRECTION - 1.5, 0,0]) {
+    //translate([(DW-D2W)/2-DISP_X_CORRECTION, 0,0]) 
+    {
     translate([+(PW/2-offset), +(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
     translate([-(PW/2-offset), +(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
     translate([+(PW/2-offset), -(PH/2-offset), -wh-FD/2]) difference() {cylinder(wh, d=dia); cylinder(wh+1, d=2.5);};
@@ -113,7 +120,7 @@ difference()
                 holes(holes_w, holes_h, AIRFLOW_HOLE_DIAMETER);
         }
     }
-    translate([(DW-D2W)/2-DISP_X_CORRECTION- 1.5, 0,0])
+    translate([(DW-D2W)/2-DISP_X_CORRECTION, 0,0])
         display_module();
 }
     
