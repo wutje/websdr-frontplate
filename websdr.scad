@@ -19,9 +19,9 @@ D2D=3 + extra;
 
 /* [frontplate] */
 FH=60;
-FW=120;
-FD=2;
-WIREHOLE_D=7;
+FW=121.5;
+FD=1.8;
+WIREHOLE_D=10;
 STANDOFF_D=6;
 AIRFLOW_HOLE_DIAMETER=3.2;
 //Front plaat offset tov scherm 25% vanaf bovenkant
